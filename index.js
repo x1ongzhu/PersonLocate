@@ -148,6 +148,11 @@ app.get('/files/:fileName/', function (req, res) {
     var fileName = req.params.fileName
     res.sendFile(path.resolve(__dirname, 'files', fileName))
 })
+app.all('*', function (req, res, next) {
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Methods', '*');
+    next();
+})
 app.listen(8081)
 
 function saveImg(url) {
