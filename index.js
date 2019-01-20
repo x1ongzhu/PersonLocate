@@ -5,10 +5,9 @@ const { JSDOM } = jsdom
 const request = require('request-promise')
 const rq = require('request')
 const fs = require('fs')
-const uuidv1 = require('uuid/v1')
 const path = require('path')
-app.engine('jade', require('jade').__express);
-app.set("view engine", "jade");
+const crypto = require('crypto');
+app.set('view engine', 'pug')
 
 app.get('/admin', function (req, res) {
     var str = fs.readFileSync('record.txt').toString()
@@ -31,11 +30,36 @@ app.get('/save/', function (req, res) {
     fs.writeFile('record.txt', `${req.query.name} ${req.query.location} ${real_ip} ${new Date().getTime()}\n`, { flag: 'a' }, err => { });
     res.send({ success: true })
 })
-app.get('/:url/', async function (req, res) {
-    var html = await request({
-        method: 'get',
-        url: req.params.url
+app.get('/delRecord/', function (req, res) {
+    var str = fs.readFileSync('record.txt').toString()
+    var records = str.split('\n').map(i => {
+        return i.split(' ')
+    }).filter(i => {
+        return i.length === 4
     })
+    records.splice(req.query.index, 1)
+    str = records.map(i => {
+        return i.join(' ')
+    }).join('\n');
+    console.log(str)
+    fs.writeFileSync('record.txt', str)
+    res.send({ success: true })
+})
+app.get('/delAllRecord/', function (req, res) {
+    fs.writeFileSync('record.txt', '')
+    res.send({ success: true })
+})
+app.get('/:url/', async function (req, res) {
+    var html
+    try {
+        html = await request({
+            method: 'get',
+            url: req.params.url
+        })
+    } catch (e) {
+        res.sendStatus(404);
+        return
+    }
     const dom = new JSDOM(html)
     var eles = dom.window.document.querySelectorAll("img")
     for (n in dom.window.document.querySelectorAll("img")) {
@@ -71,7 +95,6 @@ app.get('/:url/', async function (req, res) {
     map.centerAndZoom(point,12);
     
     var geolocation = new BMap.Geolocation();
-    // 开启SDK辅助定位
     geolocation.enableSDKLocation();
     geolocation.getCurrentPosition(function(r){
         if(this.getStatus() == BMAP_STATUS_SUCCESS){
@@ -95,16 +118,22 @@ app.get('/files/:fileName/', function (req, res) {
 app.listen(8081)
 
 function saveImg(url) {
-    var fileName = uuidv1()
+    var md5 = crypto.createHash('md5');
+    var fileName = md5.update(url).digest('hex');
     return new Promise((resolve, reject) => {
-        var writeStream = fs.createWriteStream('./files/' + fileName)
-        writeStream.on('finish', () => {
+        try {
+            fs.statSync('./files/' + fileName)
             resolve(fileName)
-        })
-        rq.get(url)
-            .on('error', err => {
-                reject(err)
+        } catch (e) {
+            var writeStream = fs.createWriteStream('./files/' + fileName)
+            writeStream.on('finish', () => {
+                resolve(fileName)
             })
-            .pipe(writeStream)
+            rq.get(url)
+                .on('error', err => {
+                    reject(err)
+                })
+                .pipe(writeStream)
+        }
     })
 }

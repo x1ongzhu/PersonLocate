@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+html(lang="en")
+    head
+        title admin
+        meta(charset="utf-8")
+        meta(name="viewport" content="width=device-width,initial-scale=1.0")
+        body
+            table(cellspacing=10)
+                tr
+                    th 姓名
+                    th 坐标
+                    th ip
+                    th 时间
+                each item,index in record
+                    tr 
+                        td #{item[0]}
+                        td 
+                            a(href=`http://api.map.baidu.com/marker?location=${item[1]}&title=ta的位置&content=位置&output=html&src=webapp.baidu.openAPIdemo` target="_blank") #{item[1]}
+                        td #{item[2]}
+                        td #{item[3]}
+                        td 
+                            button(onclick='del('+index+')') 删除
+            button(onclick='delAll()') 清除
+            script.
+                function delAll(){
+                    var xhr = new XMLHttpRequest();
+                    xhr.open('get', '/delAllRecord');
+                    xhr.send();
+                    xhr.onreadystatechange = function () {
+                        if (xhr.readyState == 4 && xhr.status == 200) {
+                            window.location.reload();
+                        }
+                    }
+                }
+                function del(index){
+                    var xhr = new XMLHttpRequest();
+                    xhr.open('get', '/delRecord?index='+index);
+                    xhr.send();
+                    xhr.onreadystatechange = function () {
+                        if (xhr.readyState == 4 && xhr.status == 200) {
+                            window.location.reload();
+                        }
+                    }
+                }
+            
