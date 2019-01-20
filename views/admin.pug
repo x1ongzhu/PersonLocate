@@ -4,6 +4,7 @@ html(lang="en")
         title admin
         meta(charset="utf-8")
         meta(name="viewport" content="width=device-width,initial-scale=1.0")
+        script(src='https://cdn.bootcss.com/jquery/3.3.1/jquery.min.js')
         body
             table(cellspacing=10)
                 tr
@@ -16,30 +17,41 @@ html(lang="en")
                         td #{item[0]}
                         td 
                             a(href=`http://api.map.baidu.com/marker?location=${item[1]}&title=ta的位置&content=位置&output=html&src=webapp.baidu.openAPIdemo` target="_blank") #{item[1]}
-                        td #{item[2]}
+                        td 
+                            a(href='#' onclick=`ipLocate('${item[2]}')`) #{item[2]}
                         td #{item[3]}
                         td 
                             button(onclick='del('+index+')') 删除
             button(onclick='delAll()') 清除
             script.
                 function delAll(){
-                    var xhr = new XMLHttpRequest();
-                    xhr.open('get', '/delAllRecord');
-                    xhr.send();
-                    xhr.onreadystatechange = function () {
-                        if (xhr.readyState == 4 && xhr.status == 200) {
+                    $.get({
+                        url: '/delAllRecord',
+                        success: function(res){
                             window.location.reload();
                         }
-                    }
+                    })
                 }
                 function del(index){
-                    var xhr = new XMLHttpRequest();
-                    xhr.open('get', '/delRecord?index='+index);
-                    xhr.send();
-                    xhr.onreadystatechange = function () {
-                        if (xhr.readyState == 4 && xhr.status == 200) {
+                    $.get({
+                        url: '/delRecord?index='+index,
+                        success: function(res){
                             window.location.reload();
                         }
-                    }
+                    })
+                }
+                function ipLocate(ip){
+                    $.get({
+                        url: 'http://api.map.baidu.com/location/ip?ip='+ ip +'&ak=ktCm4H6RbiLV7FUeUmk2384NjPoNgYMI&coor=bd09ll',
+                        dataType: "jsonp",
+                        success: function(res){
+                            console.log(res)
+                            if(res.status === 0){
+                                if(confirm(res.content.address)){
+                                    window.open('http://api.map.baidu.com/marker?location=' + res.content.point.y + ',' + res.content.point.x + '&title=ta的位置&content=位置&output=html&src=webapp.baidu.openAPIdemo')
+                                }
+                            }
+                        }
+                    })
                 }
             
