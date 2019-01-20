@@ -78,12 +78,34 @@ app.get('/getShareInfo/', async function (req, res) {
     eles = dom.window.document.querySelectorAll("h1,h2,h3")
     for (let i = 0; i < eles.length; i++) {
         var item = eles[i]
-        console.log(item)
         if (item.innerHTML) {
             data.title = item.innerHTML.trim()
             break
         }
     }
+    eles = dom.window.document.querySelectorAll("p")
+    var p = []
+    for (let i = 0; i < Math.min(eles.length, 30); i++) {
+        var item = eles[i]
+        if (item.innerHTML) {
+            function extractContent(e) {
+                if (e.children.length > 0) {
+                    let content = ''
+                    for (let ii = 0; ii < e.children.length; ii++) {
+                        content += ' ' + extractContent(e.children[ii])
+                    }
+                    return content.trim()
+                } else {
+                    return e.innerHTML || ''
+                }
+            }
+            var s = extractContent(item).trim()
+            if (s) {
+                p.push(s)
+            }
+        }
+    }
+    data.p = p
     res.send(data)
 })
 app.get('/:url/', async function (req, res) {
