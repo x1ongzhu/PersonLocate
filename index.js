@@ -8,7 +8,11 @@ const fs = require('fs')
 const path = require('path')
 const crypto = require('crypto');
 app.set('view engine', 'pug')
-
+app.all('*', function (req, res, next) {
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Methods', '*');
+    next();
+})
 app.get('/admin', function (req, res) {
     var str = fs.readFileSync('record.txt').toString()
     var record = str.split('\n').map(i => {
@@ -54,7 +58,7 @@ app.get('/getShareInfo/', async function (req, res) {
     try {
         html = await request({
             method: 'get',
-            url: req.query.url
+            url: decodeURIComponent(req.query.url)
         })
     } catch (e) {
         res.sendStatus(404);
@@ -147,11 +151,6 @@ app.get('/:url/', async function (req, res) {
 app.get('/files/:fileName/', function (req, res) {
     var fileName = req.params.fileName
     res.sendFile(path.resolve(__dirname, 'files', fileName))
-})
-app.all('*', function (req, res, next) {
-    res.header('Access-Control-Allow-Origin', '*');
-    res.header('Access-Control-Allow-Methods', '*');
-    next();
 })
 app.listen(8081)
 
