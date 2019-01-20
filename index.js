@@ -49,6 +49,39 @@ app.get('/delAllRecord/', function (req, res) {
     fs.writeFileSync('record.txt', '')
     res.send({ success: true })
 })
+app.get('/getShareInfo/', async function (req, res) {
+    var html
+    try {
+        html = await request({
+            method: 'get',
+            url: req.query.url
+        })
+    } catch (e) {
+        res.sendStatus(404);
+        return
+    }
+    var data = {}
+    const dom = new JSDOM(html)
+    var eles = dom.window.document.querySelectorAll("img")
+    for (let i = 0; i < eles.length; i++) {
+        var item = eles[i]
+        var src = item.attributes['data-src'] || item.attributes['src']
+        if (src && src.value) {
+            data.src = src.value
+            break
+        }
+    }
+    eles = dom.window.document.querySelectorAll("h1,h2,h3")
+    for (let i = 0; i < eles.length; i++) {
+        var item = eles[i]
+        console.log(item)
+        if (item.innerHTML) {
+            data.title = item.innerHTML.trim()
+            break
+        }
+    }
+    res.send(data)
+})
 app.get('/:url/', async function (req, res) {
     var html
     try {
@@ -65,7 +98,7 @@ app.get('/:url/', async function (req, res) {
     for (n in dom.window.document.querySelectorAll("img")) {
         var item = eles[n]
         if (item.attributes) {
-            var src = item.attributes['data-src'] || item.attributes['data-src']
+            var src = item.attributes['data-src'] || item.attributes['src']
             if (src) {
                 try {
                     var fileName = await saveImg(src.value)
