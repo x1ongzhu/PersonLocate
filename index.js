@@ -46,7 +46,7 @@ app.get('/delRecord/', function (req, res) {
         return i.join(' ')
     }).join('\n');
     console.log(str)
-    fs.writeFileSync('record.txt', str)
+    fs.writeFileSync('record.txt', str + '\n')
     res.send({ success: true })
 })
 app.get('/delAllRecord/', function (req, res) {
